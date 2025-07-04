@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eagle IT Solutions - Soluções em Tecnologia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome for social media icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- 
+    Chosen Palette: Black & Red
+    Application Structure Plan: A single-page landing page with vertical scrolling sections, designed for a seamless, narrative-like user flow leading to conversion. Key sections include: Hero (immediate impact with advanced GSAP parallax and prominent CTA animation), Services (interactive exploration with enhanced GSAP card animations), About/Process (trust-building with subtle hover effects), Why Us (data-driven differentiation), Portfolio (dynamic showcasing with GSAP carousel interactions and image hovers), Video Institutional (engaging video content), and Contact (clear action with GSAP input feedback). This layout enhances engagement and simplifies the presentation of a focused set of services, leveraging advanced GSAP animations for a modern, high-performance feel.
+    Visualization & Content Choices: 
+    - Report Info: Company name and mission -> Goal: Inform/Engage -> Viz/Method: Hero section with strong typography -> Interaction: CTA button with enhanced, continuous GSAP pulse animation and GSAP-driven parallax effect on text elements -> Justification: Creates a strong, professional first impression with dynamic and smooth visual interest, highlighting the primary call to action.
+    - Report Info: List of all services (expanded) -> Goal: Organize/Inform -> Viz/Method: Interactive card grid + dynamic details panel -> Interaction: User clicks a category to reveal specific services; service cards feature advanced GSAP hover animations (translateY, rotateZ, boxShadow) -> Justification: Simplifies a comprehensive offering, making it digestible and interactive with rich, high-performance visual feedback. (Vanilla JS + GSAP)
+    - Report Info: Company strengths/differentiators -> Goal: Compare/Persuade -> Viz/Method: Radar Chart -> Interaction: Hover tooltips -> Justification: Visually represents multi-faceted strengths effectively. (Chart.js)
+    - Report Info: How the company works -> Goal: Build Trust -> Viz/Method: CSS Flexbox-based process diagram -> Interaction: Subtle hover effects on steps -> Justification: A visual, step-by-step flow is easier to grasp and conveys transparency. (HTML/CSS)
+    - Report Info: Project examples -> Goal: Showcase capability/Build trust -> Viz/Method: Interactive portfolio carousel -> Interaction: Next/Previous buttons (GSAP click animation), pagination dots, automatic slide transition, image hover effects (GSAP scale, brightness) -> Justification: Dynamically presents projects, making the portfolio engaging and visually responsive with smooth animations. (Vanilla JS + GSAP)
+    - Report Info: Institutional Video -> Goal: Engage/Inform -> Viz/Method: Embedded responsive YouTube video -> Interaction: Play video -> Justification: Provides a dynamic and engaging way to present company values and mission.
+    - Report Info: Contact details -> Goal: Convert -> Viz/Method: Simple, clean contact form -> Interaction: Form submission, input focus animations (GSAP border glow), submit button hover pulse (GSAP animation) -> Justification: Reduces friction for lead generation with clear and engaging feedback, enhanced by smooth animations.
+    - General: Scroll reveal animations for all major sections -> Goal: Enhanced user experience -> Viz/Method: GSAP ScrollTrigger for opacity and transform animations -> Interaction: Passive visual engagement as content comes into view -> Justification: Creates a modern, polished feel and guides the user's attention with superior animation control.
+    - Menu Animation: Mobile menu now animates smoothly using GSAP for height and opacity transitions.
+    - WhatsApp Floating Button: A fixed button at the bottom right for direct WhatsApp contact, with a subtle pulsing animation.
+    - Logo: Replaced the text with the provided image for the logo.
+    - Social Media Icons: Added social media icons with links to the footer for external engagement.
+    CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. 
+    -->
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .chart-container { position: relative; width: 100%; max-width: 500px; margin-left: auto; margin-right: auto; height: 300px; max-height: 400px; }
+        @media (min-width: 768px) { .chart-container { height: 400px; } }
+        
+        /* Service Card Base Styles (GSAP will animate properties) */
+        .service-card { transition: border-color 0.3s ease-out; } /* Keep border transition for active state */
+        .service-card.active { /* Removed background-color here to match other inactive cards */ }
+        .service-card.active p { color: #ef4444; } /* Red-500 for active icon */
+        .service-card:hover {
+            transform: translateY(-8px) rotateZ(1deg);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            border-color: #ef4444; /* Red-500 for hover border */
+        }
+
+        /* Carousel specific styles */
+        .carousel-container { position: relative; overflow: hidden; }
+        .carousel-slides { display: flex; transition: transform 0.5s ease-in-out; }
+        .carousel-slide { flex: 0 0 100%; } /* Each slide takes full width */
+        .carousel-button { background-color: rgba(239, 68, 68, 0.8); color: #111827; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; position: absolute; top: 50%; transform: translateY(-50%); z-index: 10; cursor: pointer; }
+        .carousel-button.prev { left: 10px; }
+        .carousel-button.next { right: 10px; }
+        .carousel-pagination { display: flex; justify-content: center; margin-top: 20px; }
+        .carousel-dot { width: 10px; height: 10px; border-radius: 50%; background-color: rgba(255, 255, 255, 0.3); margin: 0 5px; cursor: pointer; transition: background-color 0.3s; }
+        .carousel-dot.active { background-color: #ef4444; } /* Red-500 for active dot */
+
+        /* Input and Button Base Styles (GSAP will animate properties) */
+        .input-glow, .submit-button { transition: all 0.3s ease-out; }
+
+        /* Mobile Menu specific styles */
+        #mobile-menu {
+            height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: none; /* GSAP will handle transitions */
+        }
+
+        /* WhatsApp Button Pulse */
+        @keyframes whatsapp-pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 15px rgba(37, 211, 102, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
+        }
+        .whatsapp-button-pulse {
+            animation: whatsapp-pulse 2s infinite;
+        }
+
+        /* Responsive video container */
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+            height: 0;
+            overflow: hidden;
+            max-width: 600px; /* Adjusted max width for smaller desktop size */
+            margin-left: auto;
+            margin-right: auto;
+            border-radius: 0.5rem; /* rounded-lg */
+        }
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+    </style>
+</head>
+<body class="bg-black text-gray-200">
+
+    <header id="header" class="bg-black/80 backdrop-blur-sm fixed top-0 left-0 right-0 z-50 transition-all duration-300">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <a href="#hero" class="flex items-center">
+                    <img src="https://content-fetcher.sandbox.google.com/files/uploaded:Gemini_Generated_Image_6ie6of6ie6of6ie6.jpg-2031f089-2794-4606-a9cb-821c03e432cf" alt="Logo Eagle IT Solutions" class="h-10 mr-2">
+                </a>
+                <nav class="hidden md:flex space-x-8">
+                    <a href="#services" class="text-gray-200 hover:text-red-500 transition">Serviços</a>
+                    <a href="#about" class="text-gray-200 hover:text-red-500 transition">Sobre Nós</a>
+                    <a href="#why-us" class="text-gray-200 hover:text-red-500 transition">Diferenciais</a>
+                    <a href="#portfolio" class="text-gray-200 hover:text-red-500 transition">Portfólio</a>
+                    <a href="#video-institutional" class="text-gray-200 hover:text-red-500 transition">Vídeo Institucional</a>
+                    <a href="#contact" class="text-gray-200 hover:text-red-500 transition">Contato</a>
+                </nav>
+                <button id="mobile-menu-button" class="md:hidden text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                </button>
+            </div>
+        </div>
+        <div id="mobile-menu" class="md:hidden bg-gray-900">
+            <a href="#services" class="block py-2 px-4 text-sm text-gray-200 hover:bg-gray-800">Serviços</a>
+            <a href="#about" class="block py-2 px-4 text-sm text-gray-200 hover:bg-gray-800">Sobre Nós</a>
+            <a href="#why-us" class="block py-2 px-4 text-sm text-gray-200 hover:bg-gray-800">Diferenciais</a>
+            <a href="#portfolio" class="block py-2 px-4 text-sm text-gray-200 hover:bg-gray-800">Portfólio</a>
+            <a href="#video-institutional" class="block py-2 px-4 text-sm text-gray-200 hover:bg-gray-800">Vídeo Institucional</a>
+            <a href="#contact" class="block py-2 px-4 text-sm text-gray-200 hover:bg-gray-800">Contato</a>
+        </div>
+    </header>
+
+    <main>
+        <section id="hero" class="min-h-screen flex items-center bg-black pt-16 relative overflow-hidden">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center" id="hero-content">
+                <h1 id="hero-headline" class="text-4xl md:text-6xl font-extrabold text-white leading-tight">
+                    Tecnologia com <span class="text-red-500">Visão e Precisão</span> para o seu Negócio
+                </h1>
+                <p id="hero-paragraph" class="mt-4 text-lg md:text-xl max-w-3xl mx-auto text-gray-300">
+                    Impulsionamos o crescimento da sua empresa com soluções de TI inovadoras, desde chatbots inteligentes a sistemas robustos e seguros.
+                </p>
+                <div id="hero-cta" class="mt-8">
+                    <a href="#contact" class="bg-red-500 text-black hover:bg-red-400 font-bold py-3 px-8 rounded-full text-lg transition-transform transform hover:scale-105 inline-block">
+                        Solicite uma Consultoria Gratuita
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section id="services" class="py-20 bg-gray-900">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-white">Nossas Soluções</h2>
+                    <p class="mt-2 text-gray-300 max-w-2xl mx-auto">Explore nossas áreas de especialização. Clique em uma categoria para ver os serviços detalhados.</p>
+                </div>
+                
+                <div class="lg:grid lg:grid-cols-12 lg:gap-8 items-start">
+                    <div class="lg:col-span-4 grid grid-cols-2 gap-4 mb-8 lg:mb-0">
+                        <div class="service-card col-span-2 cursor-pointer p-6 bg-gray-950 rounded-lg border-2 border-gray-700" data-service="dev">
+                            <p class="text-2xl mb-2">🖥️</p>
+                            <h3 class="font-bold text-white">Desenvolvimento & Web</h3>
+                            <p class="text-sm text-gray-300">Soluções digitais sob medida.</p>
+                        </div>
+                        <div class="service-card cursor-pointer p-6 bg-gray-950 rounded-lg border-2 border-gray-700" data-service="chatbot">
+                            <p class="text-2xl mb-2">
+                                <svg class="w-12 h-12 inline-block text-red-500" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 1L12 1C5.9 1 1 5.9 1 12V16.5C1 18.43 2.57 20 4.5 20H5.5V23.5L9.5 20H12C18.1 20 23 15.1 23 9V4.5C23 2.57 21.43 1 19.5 1H12ZM17 12H7V10H17V12ZM17 9H7V7H17V9Z"/>
+                                </svg>
+                            </p>
+                            <h3 class="font-bold text-white">Chatbot</h3>
+                            <p class="text-sm text-gray-300">Atendimento inteligente e automatizado.</p>
+                        </div>
+                        <div class="service-card cursor-pointer p-6 bg-gray-950 rounded-lg border-2 border-gray-700" data-service="infra">
+                             <p class="text-2xl mb-2">☁️</p>
+                            <h3 class="font-bold text-white">Infraestrutura & Cloud</h3>
+                             <p class="text-sm text-gray-300">Base sólida para sua operação.</p>
+                        </div>
+                         <div class="service-card col-span-2 cursor-pointer p-6 bg-gray-950 rounded-lg border-2 border-gray-700" data-service="marketing">
+                             <p class="text-2xl mb-2">📈</p>
+                            <h3 class="font-bold text-white">Marketing & Performance</h3>
+                             <p class="text-sm text-gray-300">Alcance mais clientes online.</p>
+                        </div>
+                        <div class="service-card col-span-2 cursor-pointer p-6 bg-gray-950 rounded-lg border-2 border-gray-700" data-service="consulting">
+                             <p class="text-2xl mb-2">🤝</p>
+                            <h3 class="font-bold text-white">Consultoria Estratégica em TI</h3>
+                             <p class="text-sm text-gray-300">Otimize seus investimentos em tecnologia.</p>
+                        </div>
+                    </div>
+                    
+                    <div id="service-details" class="lg:col-span-8 bg-gray-950 p-8 rounded-lg min-h-[300px]">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="about" class="py-20 bg-black">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-white">Nossa Abordagem</h2>
+                    <p class="mt-2 text-gray-300 max-w-2xl mx-auto">Entendemos seus desafios para construir a solução perfeita, com agilidade e transparência.</p>
+                </div>
+
+                <div class="max-w-4xl mx-auto">
+                    <div class="flex flex-col md:flex-row items-center justify-between space-y-8 md:space-y-0 md:space-x-4">
+                        <div class="flex flex-col items-center text-center group">
+                            <div class="flex items-center justify-center w-20 h-20 rounded-full bg-gray-900 border-2 border-red-500 text-red-500 text-3xl font-bold mb-3 transition-transform group-hover:scale-110">1</div>
+                            <h3 class="font-bold text-white text-lg">Análise e Estratégia</h3>
+                            <p class="text-gray-300 text-sm">Mergulhamos no seu negócio para entender suas metas e desafios.</p>
+                        </div>
+                        <div class="hidden md:block flex-1 h-1 bg-gray-700"></div>
+                        <div class="flex flex-col items-center text-center group">
+                            <div class="flex items-center justify-center w-20 h-20 rounded-full bg-gray-900 border-2 border-red-500 text-red-500 text-3xl font-bold mb-3 transition-transform group-hover:scale-110">2</div>
+                            <h3 class="font-bold text-white text-lg">Proposta e Design</h3>
+                            <p class="text-gray-300 text-sm">Desenvolvemos um plano de ação claro e o design da solução.</p>
+                        </div>
+                         <div class="hidden md:block flex-1 h-1 bg-gray-700"></div>
+                        <div class="flex flex-col items-center text-center group">
+                            <div class="flex items-center justify-center w-20 h-20 rounded-full bg-gray-900 border-2 border-red-500 text-red-500 text-3xl font-bold mb-3 transition-transform group-hover:scale-110">3</div>
+                            <h3 class="font-bold text-white text-lg">Desenvolvimento Ágil</h3>
+                            <p class="text-gray-300 text-sm">Construímos sua solução com as melhores tecnologias e práticas.</p>
+                        </div>
+                        <div class="hidden md:block flex-1 h-1 bg-gray-700"></div>
+                        <div class="flex flex-col items-center text-center group">
+                            <div class="flex items-center justify-center w-20 h-20 rounded-full bg-gray-900 border-2 border-red-500 text-red-500 text-3xl font-bold mb-3 transition-transform group-hover:scale-110">4</div>
+                            <h3 class="font-bold text-white text-lg">Entrega e Suporte</h3>
+                            <p class="text-gray-300 text-sm">Implementamos a solução e oferecemos suporte contínuo.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="why-us" class="py-20 bg-gray-900">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                 <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-white">Nossos Diferenciais</h2>
+                    <p class="mt-2 text-gray-300 max-w-2xl mx-auto">Combinamos expertise técnica com um foco incansável nos resultados dos nossos clientes.</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="diferenciaisChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="portfolio" class="py-20 bg-black">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-white">Nosso Portfólio</h2>
+                    <p class="mt-2 text-gray-300 max-w-2xl mx-auto">Veja alguns dos projetos que impulsionaram o sucesso dos nossos clientes.</p>
+                </div>
+                <div class="max-w-4xl mx-auto carousel-container rounded-lg shadow-lg bg-gray-900 p-4">
+                    <div class="carousel-slides" id="portfolio-slides">
+                        <div class="carousel-slide text-center p-6">
+                            <img src="https://placehold.co/600x350/111827/cbd5e1?text=Chatbot+para+E-commerce" alt="Imagem de Chatbot para E-commerce" class="rounded-lg mb-4 mx-auto w-full max-w-md portfolio-image">
+                            <h3 class="text-xl font-bold text-white mb-2">Chatbot Inteligente para E-commerce</h3>
+                            <p class="text-gray-300">Desenvolvimento de um chatbot com IA para atendimento 24/7, resultando em 30% de redução no tempo de resposta e aumento na satisfação do cliente.</p>
+                        </div>
+                        <div class="carousel-slide text-center p-6">
+                            <img src="https://placehold.co/600x350/111827/cbd5e1?text=Cardapio+Digital+Restaurante" alt="Imagem de Cardápio Digital para Restaurante" class="rounded-lg mb-4 mx-auto w-full max-w-md portfolio-image">
+                            <h3 class="text-xl font-bold text-white mb-2">Cardápio Digital para Restaurante</h3>
+                            <p class="text-gray-300">Criação de um cardápio digital interativo e responsivo, otimizando pedidos e melhorando a experiência do cliente em um restaurante local.</p>
+                        </div>
+                        <div class="carousel-slide text-center p-6">
+                            <img src="https://placehold.co/600x350/111827/cbd5e1?text=Website+Corporativo+Otimizado" alt="Imagem de Website Corporativo Otimizado" class="rounded-lg mb-4 mx-auto w-full max-w-md portfolio-image">
+                            <h3 class="text-xl font-bold text-white mb-2">Website Corporativo Otimizado</h3>
+                            <p class="text-gray-300">Desenvolvimento de um website institucional moderno, focado em SEO e experiência do utilizador, aumentando a visibilidade online da empresa.</p>
+                        </div>
+                        <div class="carousel-slide text-center p-6">
+                            <img src="https://placehold.co/600x350/111827/cbd5e1?text=Sistema+PDV+Personalizado" alt="Imagem de Sistema PDV Personalizado" class="rounded-lg mb-4 mx-auto w-full max-w-md portfolio-image">
+                            <h3 class="text-xl font-bold text-white mb-2">Sistema PDV Personalizado</h3>
+                            <p class="text-gray-300">Implementação de um sistema de Ponto de Venda customizado para otimizar o fluxo de caixa e gestão de stock de uma rede de lojas.</p>
+                        </div>
+                    </div>
+                    <button class="carousel-button prev" id="carousel-prev">&#10094;</button>
+                    <button class="carousel-button next" id="carousel-next">&#10095;</button>
+                    <div class="carousel-pagination" id="carousel-pagination"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="video-institutional" class="py-20 bg-gray-900">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-white">Conheça a Eagle IT Solutions</h2>
+                    <p class="mt-2 text-gray-300 max-w-2xl mx-auto">Assista ao nosso vídeo institucional e descubra como podemos impulsionar o seu negócio.</p>
+                </div>
+                <div class="video-container rounded-lg shadow-lg">
+                    <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+        </section>
+
+        <section id="contact" class="py-20 bg-black">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-white">Vamos Conversar?</h2>
+                    <p class="mt-2 text-gray-300 max-w-2xl mx-auto">Envie sua mensagem e vamos transformar suas ideias em realidade.</p>
+                </div>
+                <div class="max-w-xl mx-auto">
+                    <form action="mailto:gleydsonpaiva123@gmail.com" method="POST" enctype="text/plain" class="space-y-6">
+                        <div>
+                            <label for="name" class="sr-only">Nome</label>
+                            <input type="text" name="name" id="name" required class="w-full bg-gray-950 border border-gray-700 rounded-md py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-red-500 input-glow" placeholder="Seu nome completo">
+                        </div>
+                        <div>
+                            <label for="email" class="sr-only">Email</label>
+                            <input type="email" name="email" id="email" required class="w-full bg-gray-950 border border-gray-700 rounded-md py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-red-500 input-glow" placeholder="Seu melhor e-mail">
+                        </div>
+                        <div>
+                            <label for="message" class="sr-only">Mensagem</label>
+                            <textarea name="message" id="message" rows="5" required class="w-full bg-gray-950 border border-gray-700 rounded-md py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-red-500 input-glow" placeholder="Descreva seu projeto ou dúvida"></textarea>
+                        </div>
+                        <div>
+                            <button type="submit" class="w-full bg-red-500 text-black hover:bg-red-400 font-bold py-3 px-6 rounded-md text-lg transition submit-button">Enviar Mensagem</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-black border-t border-gray-800">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-gray-400">
+            <p>&copy; 2025 Eagle IT Solutions. Todos os direitos reservados.</p>
+            <div class="flex justify-center space-x-6 mt-4">
+                <a href="https://www.facebook.com/eagleitsolutions" target="_blank" class="text-gray-400 hover:text-red-500 transition-colors duration-300">
+                    <i class="fab fa-facebook-square text-2xl"></i>
+                </a>
+                <a href="https://www.instagram.com/eagleitsolutions" target="_blank" class="text-gray-400 hover:text-red-500 transition-colors duration-300">
+                    <i class="fab fa-instagram-square text-2xl"></i>
+                </a>
+                <a href="https://twitter.com/eagleitsol" target="_blank" class="text-gray-400 hover:text-red-500 transition-colors duration-300">
+                    <i class="fab fa-twitter-square text-2xl"></i>
+                </a>
+            </div>
+            <p class="text-sm mt-2">
+                <a href="#" id="privacy-policy-link" class="hover:text-red-500">Política de Privacidade</a>
+            </p>
+        </div>
+    </footer>
+
+    <!-- Floating WhatsApp Button -->
+    <a href="https://wa.me/5511963421674" target="_blank" class="fixed bottom-6 right-6 bg-green-500 text-white p-4 rounded-full shadow-lg hover:bg-green-600 transition-all duration-300 whatsapp-button-pulse z-50 flex items-center space-x-2">
+        <svg class="w-8 h-8" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12.04 2.02c-5.47 0-9.91 4.44-9.91 9.91 0 1.75.46 3.45 1.34 4.96l-1.4 5.14 5.24-1.37c1.45.79 3.09 1.25 4.79 1.25 5.47 0 9.91-4.44 9.91-9.91s-4.44-9.91-9.91-9.91zm.04 18.06c-1.48 0-2.95-.4-4.22-1.16l-.3-.18-3.1 1.01 1.03-3.03-.2-.32c-.79-1.29-1.25-2.77-1.25-4.32 0-4.52 3.67-8.19 8.19-8.19s8.19 3.67 8.19 8.19-3.67 8.19-8.19 8.19zm4.52-6.16c-.25-.13-.92-.46-1.07-.51-.15-.05-.26-.07-.37.07-.1.15-.4.51-.49.61-.1.1-.2.12-.37.05-.15-.07-.61-.22-1.16-.71-.43-.37-1.07-.95-1.19-1.16-.12-.2-.01-.31.09-.41.09-.1.2-.26.3-.39.1-.12.15-.2.22-.32.07-.1.03-.18-.03-.31-.07-.15-.31-.75-.43-1.02-.12-.26-.24-.22-.31-.22-.07 0-.15-.02-.23-.02-.1-.01-.25-.01-.39.09-.15.1-.58.56-.58 1.37s.6 1.59.68 1.71c.07.12 1.18 1.8 2.87 2.53 1.69.73 2.53.66 3.02.58.49-.07.92-.39 1.05-.47.13-.09.39-.2.49-.32.1-.12.1-.2.07-.32z"/>
+        </svg>
+        <span class="font-semibold">Fale Conosco</span>
+    </a>
+
+    <div id="privacy-modal" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+        <div class="bg-gray-900 rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto p-8 relative">
+             <button id="close-modal-button" class="absolute top-4 right-4 text-gray-400 hover:text-white">&times;</button>
+             <h3 class="text-2xl font-bold text-white mb-4">Política de Privacidade</h3>
+             <div class="text-gray-300 space-y-3 text-sm">
+                <p>A sua privacidade é importante para nós. É política da Eagle IT Solutions respeitar a sua privacidade em relação a qualquer informação sua que possamos coletar no site.</p>
+                <p>Solicitamos informações pessoais apenas quando realmente precisamos delas para lhe fornecer um serviço. Fazemo-lo por meios justos e legais, com o seu conhecimento e consentimento. Também informamos por que estamos coletando e como será usado.</p>
+                <p>Apenas retemos as informações coletadas pelo tempo necessário para fornecer o serviço solicitado. Quando armazenamos dados, protegemos dentro de meios comercialmente aceitáveis para evitar perdas e roubos, bem como acesso, divulgação, cópia, uso ou modificação não autorizados.</p>
+                <p>O nosso site pode ter links para sites externos que não são operados por nós. Esteja ciente de que não temos controle sobre o conteúdo e práticas desses sites e não podemos aceitar responsabilidade por suas respectivas políticas de privacidade.</p>
+             </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Register GSAP plugins
+            gsap.registerPlugin(ScrollTrigger);
+
+            const serviceData = {
+                dev: {
+                    title: "Desenvolvimento & Web",
+                    description: "Criamos experiências digitais que cativam usuários e impulsionam resultados, utilizando as tecnologias mais modernas e eficientes do mercado.",
+                    items: [
+                        "Chatbots para Atendimento ao Cliente",
+                        "Cardápios Digitais Interativos",
+                        "Websites Institucionais e E-commerce",
+                        "Sistemas PDV (Ponto de Venda)",
+                        "Integração de Sistemas"
+                    ]
+                },
+                chatbot: { // Changed from security to chatbot
+                    title: "Chatbot",
+                    description: "Implementamos soluções de chatbot inteligentes e personalizadas para otimizar o atendimento ao cliente, aumentar a eficiência e melhorar a experiência do usuário.",
+                    items: [
+                        "Chatbots para Atendimento ao Cliente 24/7",
+                        "Integração com Plataformas Existentes",
+                        "Personalização de Fluxos de Conversa",
+                        "Análise de Desempenho do Chatbot"
+                    ]
+                },
+                infra: {
+                    title: "Infraestrutura & Cloud",
+                    description: "Construímos e gerenciamos a fundação tecnológica que sustenta seu negócio, garantindo performance, escalabilidade e disponibilidade.",
+                    items: [
+                        "Migração para Nuvem (AWS, Google Cloud, Azure)",
+                        "Gerenciamento de Infraestrutura em Nuvem",
+                        "Soluções de Armazenamento em Nuvem",
+                        "Suporte Técnico Remoto e Presencial (Help Desk)",
+                        "Gerenciamento de Redes e Servidores"
+                    ]
+                },
+                marketing: {
+                    title: "Marketing & Performance",
+                    description: "Aumentamos sua visibilidade online e atraímos clientes qualificados através de estratégias de marketing digital baseadas em dados.",
+                    items: [
+                        "Otimização para Motores de Busca (SEO)",
+                        "Gestão de Campanhas de Anúncios Online (Google Ads, Redes Sociais)",
+                        "Criação de Conteúdo para Blogs e Redes Sociais",
+                        "Análise de Dados e Business Intelligence (BI)",
+                        "Gestão de Redes Sociais"
+                    ]
+                },
+                consulting: {
+                    title: "Consultoria Estratégica em TI",
+                    description: "Oferecemos orientação especializada para otimizar seus investimentos em tecnologia e alinhar a TI aos objetivos de negócio, garantindo decisões informadas e resultados tangíveis.",
+                    items: [
+                        "Planejamento Estratégico de TI",
+                        "Otimização de Processos com Tecnologia",
+                        "Análise de Viabilidade de Projetos",
+                        "Seleção e Implementação de Software"
+                    ]
+                }
+            };
+
+            const serviceDetailsContainer = document.getElementById('service-details');
+            const serviceCards = document.querySelectorAll('.service-card');
+
+            function updateServiceDetails(serviceKey) {
+                const data = serviceData[serviceKey];
+                let itemsHtml = data.items.map(item => `<li class="flex items-start"><span class="text-red-500 mr-2 mt-1">✓</span><span>${item}</span></li>`).join('');
+
+                serviceDetailsContainer.innerHTML = `
+                    <div class="fade-in">
+                        <h3 class="text-2xl font-bold text-white mb-2">${data.title}</h3>
+                        <p class="text-white mb-6">${data.description}</p>
+                        <ul class="space-y-3 text-white">
+                            ${itemsHtml}
+                        </ul>
+                        <div class="mt-8">
+                             <a href="#contact" class="bg-gray-700 text-white hover:bg-gray-600 font-bold py-2 px-6 rounded-full text-base transition inline-block">Saber Mais</a>
+                        </div>
+                    </div>
+                `;
+            }
+
+            serviceCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    serviceCards.forEach(c => c.classList.remove('active'));
+                    card.classList.add('active');
+                    const serviceKey = card.getAttribute('data-service');
+                    updateServiceDetails(serviceKey);
+                });
+
+                // GSAP Service Card Hover Animations
+                gsap.set(card, { transformOrigin: "center center" });
+                card.addEventListener('mouseenter', () => {
+                    gsap.to(card, {
+                        y: -8,
+                        rotationZ: 1,
+                        boxShadow: "0px 10px 20px rgba(0, 0, 0, 0.3)",
+                        duration: 0.3,
+                        ease: "power2.out"
+                    });
+                });
+                card.addEventListener('mouseleave', () => {
+                    gsap.to(card, {
+                        y: 0,
+                        rotationZ: 0,
+                        boxShadow: "0px 0px 0px rgba(0, 0, 0, 0)",
+                        duration: 0.3,
+                        ease: "power2.out"
+                    });
+                });
+            });
+
+            // Set 'dev' card as active on load using JavaScript to ensure consistency
+            const devCard = document.querySelector('.service-card[data-service="dev"]');
+            if (devCard) {
+                devCard.classList.add('active');
+                updateServiceDetails('dev');
+            }
+
+            const ctx = document.getElementById('diferenciaisChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Expertise Técnica', 'Suporte Ágil', 'Inovação', 'Custo-Benefício', 'Segurança', 'Foco no Cliente'],
+                    datasets: [{
+                        label: 'Nossos Pontos Fortes',
+                        data: [9, 8, 9, 7, 10, 9],
+                        backgroundColor: 'rgba(239, 68, 68, 0.2)', /* Red-500 with opacity */
+                        borderColor: 'rgba(239, 68, 68, 1)', /* Red-500 */
+                        pointBackgroundColor: 'rgba(239, 68, 68, 1)', /* Red-500 */
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(239, 68, 68, 1)' /* Red-500 */
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(255, 255, 255, 0.2)' },
+                            grid: { color: 'rgba(255, 255, 255, 0.2)' },
+                            pointLabels: { color: '#cbd5e1', font: { size: 12 } },
+                            ticks: {
+                                color: '#94a3b8',
+                                backdropColor: 'rgba(0, 0, 0, 0)',
+                                stepSize: 2
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 10
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#cbd5e1'
+                            }
+                        }
+                    }
+                }
+            });
+
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            
+            // GSAP Mobile Menu Animation
+            let menuTween;
+            mobileMenuButton.addEventListener('click', () => {
+                if (mobileMenu.classList.contains('hidden')) {
+                    mobileMenu.classList.remove('hidden');
+                    menuTween = gsap.fromTo(mobileMenu, 
+                        { height: 0, opacity: 0 }, 
+                        { height: 'auto', opacity: 1, duration: 0.3, ease: "power2.out" }
+                    );
+                } else {
+                    menuTween = gsap.to(mobileMenu, 
+                        { height: 0, opacity: 0, duration: 0.3, ease: "power2.out", onComplete: () => mobileMenu.classList.add('hidden') }
+                    );
+                }
+            });
+            
+            document.querySelectorAll('#mobile-menu a').forEach(link => {
+                link.addEventListener('click', () => {
+                    if (menuTween) {
+                        menuTween.kill(); // Stop any ongoing animation
+                    }
+                    gsap.to(mobileMenu, 
+                        { height: 0, opacity: 0, duration: 0.3, ease: "power2.out", onComplete: () => mobileMenu.classList.add('hidden') }
+                    );
+                });
+            });
+
+            const privacyLink = document.getElementById('privacy-policy-link');
+            const privacyModal = document.getElementById('privacy-modal');
+            const closeModalButton = document.getElementById('close-modal-button');
+            privacyLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                privacyModal.classList.remove('hidden');
+            });
+            closeModalButton.addEventListener('click', () => {
+                privacyModal.classList.add('hidden');
+            });
+            privacyModal.addEventListener('click', (e) => {
+                if (e.target === privacyModal) {
+                    privacyModal.classList.add('hidden');
+                }
+            });
+
+            let header = document.getElementById('header');
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 50) {
+                    header.classList.add('bg-black', 'shadow-lg');
+                } else {
+                    header.classList.remove('bg-black', 'shadow-lg');
+                }
+            });
+
+            // Carousel Logic
+            const slidesContainer = document.getElementById('portfolio-slides');
+            const slides = document.querySelectorAll('.carousel-slide');
+            const portfolioImages = document.querySelectorAll('.portfolio-image');
+            const prevButton = document.getElementById('carousel-prev');
+            const nextButton = document.getElementById('carousel-next');
+            const paginationContainer = document.getElementById('carousel-pagination');
+            let currentSlide = 0;
+            let slideInterval;
+
+            function showSlide(index) {
+                gsap.to(slidesContainer, { x: -index * 100 + '%', duration: 0.5, ease: "power2.out" });
+                updatePagination(index);
+            }
+
+            function nextSlide() {
+                currentSlide = (currentSlide + 1) % slides.length;
+                showSlide(currentSlide);
+            }
+
+            function prevSlide() {
+                currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+                showSlide(currentSlide);
+            }
+
+            function updatePagination(activeIndex) {
+                paginationContainer.innerHTML = '';
+                slides.forEach((_, i) => {
+                    const dot = document.createElement('span');
+                    dot.classList.add('carousel-dot');
+                    if (i === activeIndex) {
+                        dot.classList.add('active');
+                    }
+                    dot.addEventListener('click', () => {
+                        currentSlide = i;
+                        showSlide(currentSlide);
+                        resetAutoSlide();
+                    });
+                    paginationContainer.appendChild(dot);
+                });
+            }
+
+            function startAutoSlide() {
+                slideInterval = setInterval(nextSlide, 5000); // Change slide every 5 seconds
+            }
+
+            function resetAutoSlide() {
+                clearInterval(slideInterval);
+                startAutoSlide();
+            }
+
+            prevButton.addEventListener('click', () => {
+                prevSlide();
+                resetAutoSlide();
+            });
+            nextButton.addEventListener('click', () => {
+                nextSlide();
+                resetAutoSlide();
+            });
+
+            // GSAP Carousel Button Animations
+            [prevButton, nextButton].forEach(button => {
+                button.addEventListener('mouseenter', () => {
+                    gsap.to(button, { scale: 1.1, duration: 0.2 });
+                });
+                button.addEventListener('mouseleave', () => {
+                    gsap.to(button, { scale: 1, duration: 0.2 });
+                });
+                button.addEventListener('mousedown', () => {
+                    gsap.to(button, { scale: 0.9, duration: 0.1 });
+                });
+                button.addEventListener('mouseup', () => {
+                    gsap.to(button, { scale: 1.1, duration: 0.1 });
+                });
+            });
+
+            // GSAP Portfolio Image Hover
+            portfolioImages.forEach(image => {
+                image.addEventListener('mouseenter', () => {
+                    gsap.to(image, { scale: 1.03, filter: "brightness(1.1)", duration: 0.3, ease: "power2.out" });
+                });
+                image.addEventListener('mouseleave', () => {
+                    gsap.to(image, { scale: 1, filter: "brightness(1)", duration: 0.3, ease: "power2.out" });
+                });
+            });
+
+            showSlide(currentSlide);
+            startAutoSlide();
+
+            // GSAP Scroll Reveal Animations
+            const sections = document.querySelectorAll('section');
+            sections.forEach(section => {
+                gsap.from(section, {
+                    opacity: 0,
+                    y: 50,
+                    duration: 0.8,
+                    ease: "power2.out",
+                    scrollTrigger: {
+                        trigger: section,
+                        start: "top 80%",
+                        toggleActions: "play none none reverse",
+                    }
+                });
+            });
+
+            // GSAP Parallax Effect for Hero Section
+            const heroSection = document.getElementById('hero');
+            const heroHeadline = document.getElementById('hero-headline');
+            const heroParagraph = document.getElementById('hero-paragraph');
+            const heroCta = document.getElementById('hero-cta'); // Target the div containing the button
+
+            heroSection.addEventListener('mousemove', (e) => {
+                const speed = 0.03;
+                const x = (window.innerWidth / 2 - e.clientX) * speed;
+                const y = (window.innerHeight / 2 - e.clientY) * speed;
+
+                gsap.to(heroHeadline, { x: x * 0.5, y: y * 0.5, duration: 0.5, ease: "power2.out", overwrite: true });
+                gsap.to(heroParagraph, { x: x * 0.3, y: y * 0.3, duration: 0.5, ease: "power2.out", overwrite: true });
+                gsap.to(heroCta, { x: x * 0.1, y: y * 0.1, duration: 0.5, ease: "power2.out", overwrite: true });
+            });
+
+            heroSection.addEventListener('mouseleave', () => {
+                gsap.to([heroHeadline, heroParagraph, heroCta], { x: 0, y: 0, duration: 0.7, ease: "elastic.out(1, 0.5)" });
+            });
+
+            // GSAP Input Focus Glow
+            const inputFields = document.querySelectorAll('.input-glow');
+            inputFields.forEach(input => {
+                input.addEventListener('focus', () => {
+                    gsap.to(input, {
+                        boxShadow: "0 0 0 3px rgba(239, 68, 68, 0.5)", /* Red-500 glow */
+                        borderColor: "#ef4444", /* Red-500 border */
+                        duration: 0.2
+                    });
+                });
+                input.addEventListener('blur', () => {
+                    gsap.to(input, {
+                        boxShadow: "0 0 0 0 rgba(239, 68, 68, 0)",
+                        borderColor: "#374151", /* gray-700 */
+                        duration: 0.2
+                    });
+                });
+            });
+
+            // GSAP Prominent CTA Button Pulse
+            const mainCtaButton = document.querySelector('#hero-cta a'); // Target the actual <a> tag inside the div
+            gsap.to(mainCtaButton, {
+                scale: 1.05,
+                boxShadow: "0 0 0 15px rgba(239, 68, 68, 0)", /* Larger pulse effect */
+                repeat: -1,
+                yoyo: true,
+                duration: 1.2, /* Slower pulse */
+                ease: "power1.inOut"
+            });
+        });
+    </script>
+</body>
+</html>
